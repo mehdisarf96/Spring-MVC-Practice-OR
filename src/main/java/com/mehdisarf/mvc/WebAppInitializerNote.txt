@@ -1,0 +1,8 @@
+WebApplicationInitializer
+
+classie ke qarare detect beshe tavasote spring-context-support
+and it will cause our container to be bootstraped for the web application.
+
+so (tuye src/main/java) ye class misazam (esmesho gozashtam AppInitializer)
+ke implements mikone WebApplicationInitializer interface ro (org.springframework.web.WebApplicationInitializer).
+
