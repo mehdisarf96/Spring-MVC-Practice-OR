@@ -1,0 +1,95 @@
+use Java Based Configuration to register and configure Spring MVC Dispatcher Servlet.
+
+DispaServ: the entry point for the FrontController pattern.
+
+baraye shoru'e config e Dispatcher Servlet,
+lazeme ke darun e WebApplicationInitializer emun kar konim.
+
+
+The WebApplicationInitializer interface detect mishe tavasote Servlet 3.0 Container
+and will cause the onStartup() method to be invoked. (ye sout("hello world") tush neveshtam ke bad az ejra, tuye console chap shod.)
+
+bayad tu badane startup() method, config hayii benevisim ke 2 kar ro baramun anjam bedan.
+
+1) first, we need to bootstrap our IOC container.
+
+2) and second, we need to register our Dispatcher Servlet with the Servlet Context.
+
+================================================
+
+baraye 1) we use an ApplicationContext (which basically represents the IOC container and allows us
+to register beans and configuration with it).
+
+qarare az The AnnotationConfigWebApplicationContext estefade konim.
+
+(AnnotationConfigWebApplicationContext is a ApplicationContext va behemun
+ejaze mide to use annotations on our classes to configure the IOC container)
+
+
+AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+
+alan mituni az register() estefade koni ta register koni ye configuration class ro.
+
+context.register(WebConfig.class);
+
+alan dg etablish kardeiim ApplicationContext emun ro va mitunim berim soraqe
+disptacher servlet.
+
+baraye 2)
+
+DispatcherServlet dispatcherServlet = new DispatcherServlet(context);
+
+using Servlet3.0 features, we can now dynamically register the servlet.
+
+be in shekl ke aval servlet e mun ro be ServletContext add mikonim ba method e addServlet()
+va bad in method, ye ServletRegistration.Dynamic barmigardune
+ke be vasileye in object e ServletRegistration.Dynamic , mitunim servletemun ro
+bishtar config konim.
+
+	ServletRegistration.Dynamic registration = servletContext.addServlet("dispatcher",dispatcherServlet);
+	registration.addMapping("/");
+	registration.setLoadOnStartup(1);
+
+*******************************************
+Interface ServletRegistration
+Interface through which a Servlet may be further configured.
+اینترفیسی که از طریق آن یک سرولت ممکن است بیشتر پیکربندی شود.
+
+
+Interface ServletRegistration.Dynamic
+Interface through which a Servlet registered via one of the addServlet methods on ServletContext may be further configured.
+
+pas dar haqiqat ServletRegistration.Dynamic & ServletRegistration yek bastari
+hastand baraye bishtar-configure-kardan e ye servlet.
+*******************************************
+
+
+
+*******************************************parantez
+
+public interface ServletRegistration extends Registration {
+    ..
+
+    ..
+
+    ..
+
+    public interface Dynamic extends ServletRegistration,...{
+
+    }
+
+*******************************************
+
+
+registration.setLoadOnStartup(1);
+baes mishe ke tu in App, servletemun beshe avalin servleti ke register mishe.
+
+============================================
+
+@RequestMapping()
+public String message(){
+	return "Hello";
+}
+
+mikham "Hello" bargarde va return beshe be onvane Body of the Response.
+baraye inke in etefaq biofte, balaye method @ResponseBody ro mizarim.
