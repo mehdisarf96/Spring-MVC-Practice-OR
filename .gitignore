@@ -13,3 +13,4 @@ exploration
 *.iws
 *.class
 .idea
+.target
