@@ -1,0 +1,75 @@
+Expedited approach for configuring DispatcherServlet.
+
+in approach estefade mikone az ye class provided by Spring be esme AbstractAnnotationConfigDispatcherServletInitializer.
+(Abstract e avalesh vase ine ke in class ye abstract class e.)
+
+in class bemun ejaze mide ke be sadegi ye DispatcherServlet ro register konim tuye Servlet Context; simply by extending it!
+
+so miam ye class misazam (man tu app am sakhtam va esmesh ro gozashtam masalan DispatcherInitializer) va bad kari mikonam ke extend kone AbstractAnnotationConfigDispatcherServletInitializer ro.
+
+bad khahi did ke 3ta method hastand ke bayad override shun koni from base class.
+
+getServletConfigClasses() : should return an array of classes that are our configuration classes for the IOC container.
+
+so body esh ro injuri minevisam:
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{WebAppConfig.class};
+    }
+
+vaqti WebAppConfig.class ro minevisim unja,
+in kar dar vaqe yejur register kardan e WebAppConfig.class ast within application context.
+
+so vaqti appemun start mishe va spring MVC bootstrap mikone IOC container ro,
+(be lotfe AbstractAnnotationConfigDispatcherServletInitializer) invoke mikone getServletConfigClasses() ro
+va mifahme o midune ke lazeme in config class ro (tu in mesal WebAppConfig) tuye IOC Container register kone.
+
+
+alan momkene beporsi ke "What about the DispatcherServlet?" pas DispatcherServlet chi?
+where are we actually performing the registration?
+
+emm. rastesh in qazie behind the scene va tuye base class handle mishe.
+tanha kari ke lazeme bokonim ine ke Servlet Mappings ro baraye DispatcherServlet faraham va provide bokonim.
+
+so body e getServletMappings() ro injur minevisim (va anasore un String array
+path hayii hastand ke dus darim DispatcherServlet beheshun map beshe):
+
+return new String[] {"/"};
+
+=================================
+
+alan mitunim app e mun ro run konim be sharti ke our AppInitializer ro delete konim.
+so kari ke dar vaqe kardim in bud ke umadim in configuration
+(class e DispatcherInitializer ke extends mikone AbstractAnnotationConfigDispatcherServletInitializer) ro
+jazgozine in configuration (AppInitializer ke implement mikone WebApplicationInitilizer) kardim ke besiar ham
+sade tare in jadide. so dg be class e AppInitializer niazi nist va delete.
+
+age AppInitializer (ke implement mikone WebApplicationInitilizer) ro pak nakoni, exception mide.
+
+(man pak nakardam va injur shod:
+
+26-Feb-2022 20:39:27.732 SEVERE [RMI TCP Connection(3)-127.0.0.1] org.apache.tomcat.util.modeler.BaseModelMBean.invoke Exception invoking method [manageApp]
+	java.lang.IllegalStateException: Error starting child
+		.
+	Caused by: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[localhost].StandardContext[/Spring_MVC_Practice_OR_war_exploded]]
+	.
+	Caused by: java.lang.IllegalStateException: Failed to register servlet with name 'dispatcher'. Check if there is another servlet registered under the same name.
+	.
+26-Feb-2022 20:39:27.745 SEVERE [RMI TCP Connection(3)-127.0.0.1] org.apache.tomcat.util.modeler.BaseModelMBean.invoke Exception invoking method [createStandardContext]
+	javax.management.RuntimeOperationsException: Exception invoking method [manageApp]
+	.	.
+	Caused by: java.lang.IllegalStateException: Error starting child
+	.
+	Caused by: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[localhost].StandardContext[/Spring_MVC_Practice_OR_war_exploded]]
+	.
+	Caused by: java.lang.IllegalStateException: Failed to register servlet with name 'dispatcher'. Check if there is another servlet registered under the same name.
+	.
+[2022-02-26 08:39:27,851] Artifact Spring-MVC-Practice-OR:war exploded: Error during artifact deployment. See server log for details.
+
+)
+
+alan mitunim app e mun ro run.
+
+so tu in dars yad gereftim ke ye approach ii ro ke bemun ejaze mide
+DispatcherServlet ro configure konim More Quickly. using the AbstractAnnotationConfigDispatcherServletInitializer!
