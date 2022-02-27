@@ -1,0 +1,108 @@
+Best Practice: taqsim bandi kon App et ro by concern.
+
+so for instance, the services that support an application should be separated
+from the objects that support the application's web tier. (tier = laye)
+
+kolan:
+loose coupling beyne application concerns ----> flexible and robust app
+
+to support this, Spring MVC mitune ye heirarchy besaze beyne application context ha.
+AbstractAnnotationConfigDispatcherServletInitializer ro negah ta bishtar yad begirim dar morede in qazie.
+
+mibnim ke ye method dare be esme getRootConfigClasses().
+
+in method estefade mishe baraye establish kardan e "Root application context".
+
+yani chi? yani inke :
+in ye application context ee specifically for global beans va services
+that may be shared across the application in multiple DispatcherServlets.
+
+think of the "Root application context" as holding the non-web infrastructure.
+
+all of the web infrastructure(S nemigire. chon nemigi 2ta Zirsakht!)
+would be contained in the application context associated with the DispatcherServlet.
+
+"The Dispatcher Servlet Application Context" contains beans specific to that particular DispatcherServlet.
+
+that allows us to have multiple DispatcherServlets with different configurations.
+(tu net alal khosus tu stackoverflow bud soal raje be inke tu che scenario hayii
+lazeme chandta(multiple) DispatcherServlet ba config haye motafavet dashte bashim.)
+==============================================
+
+mikham alan beram establish konam in "Root application context" ro.
+
+getRootConfigClasses() ye array az class barmigardune. so body in method ro injur:
+
+return new Class[] {RootConfig.class};
+
+class e RootConfig ro misazam:
+
+@ComponentScan("com.mehdisarf.mvc.services")
+class RootConfig{}
+
+==========================================
+
+pas man alan tu projeam ye RootConfig.java daram va yek WebConfig.java
+va class e DisptacherInitializer e man (hamun class ii ke extends mikone AbstractAnnotationConfigDispatcherServletInitializer ro.)
+ham insheklie:
+
+public class DispatcherInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{RootConfig.class};
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{WebAppConfig.class};
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+}
+
+==========================================
+WebAppConfig ro ham injur taqir midam ke faqat com.mehdisarf.mvc.controller
+ro scan kone (bejaye sabeq ke com.mehdisarf.mvc ro scan mikard.).
+
+so alan config class ham injuran:
+
+@ComponentScan("com.mehdisarf.mvc.services")
+public class RootConfig {
+}
+
+---
+
+@EnableWebMvc
+@ComponentScan("com.mehdisarf.mvc.controller")
+public class WebAppConfig {
+
+===============================================
+
+Remember!
+this configuration (dare dar morede class e WebAppConfig harf mizane) is specific to our DispatcherServlet Application Context.
+
+===================================================
+SCENARIO:
+
+@Service
+public class com.mehdisarf.mvc.services.GreetingService {
+}
+
+va dar config class ii ke "specific to Root Context" bud, darim: @ComponentScan("com.mehdisarf.mvc.services")
+So Component Scanning miad automatic, class e GreetingService ro detect mikone
+va bad register miokne as a bean tuye the Root Application Context.
+
+hala darim:
+
+@Controller
+@RequestMapping("/main")
+public class MainController {
+
+    @Autowired
+    private GreetingService greetingService; // Nokteye mohem ine ke this is coming from a different Application Context; other than the one associated with our DispatcherServlet that has actually created our controller.
+
+}
